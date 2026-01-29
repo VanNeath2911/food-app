@@ -17,14 +17,13 @@ class MyApp extends StatelessWidget {
       title: 'Food App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange), useMaterial3: true),
-      home: const MyHomePage(title: 'Food Menu'),
+      home: const MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -32,6 +31,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int selectedIndex = 0;
+
+  final List<String> pageTitles = const ['Food Menu', 'Drinks', 'Burgers', 'Pizza'];
 
   final List<Widget> pages = const [
     HomePage(title: 'Home'),
@@ -51,10 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final bool isDesktop = MediaQuery.of(context).size.width >= 700;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(pages[selectedIndex] is HomePage ? 'Food Menu' : (pages[selectedIndex] as dynamic).title),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(pageTitles[selectedIndex]), centerTitle: true),
 
       body: isDesktop
           ? Row(
