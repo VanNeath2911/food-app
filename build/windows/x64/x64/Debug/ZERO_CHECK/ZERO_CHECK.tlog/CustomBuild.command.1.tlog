@@ -1,0 +1,10 @@
+^C:\USERS\VANNEATH\ONEDRIVE\DESKTOP\FOOD-APP\BUILD\WINDOWS\X64\CMAKEFILES\EDCB594A73ED8ABCB34EF13FB406DA78\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Insiders\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/VanNeath/OneDrive/Desktop/food-app/windows -BC:/Users/VanNeath/OneDrive/Desktop/food-app/build/windows/x64 --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/VanNeath/OneDrive/Desktop/food-app/build/windows/x64/food_app.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

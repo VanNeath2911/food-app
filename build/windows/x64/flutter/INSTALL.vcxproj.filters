@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\VanNeath\OneDrive\Desktop\food-app\build\windows\x64\CMakeFiles\2ec6ade01e930342b79ce87b4212a3b3\INSTALL_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{25A18C91-144C-33A6-AEF9-61D895593048}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

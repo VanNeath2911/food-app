@@ -1,0 +1,28 @@
+^C:\USERS\VANNEATH\ONEDRIVE\DESKTOP\FOOD-APP\BUILD\WINDOWS\X64\CMAKEFILES\6ED0996154AA60B458BAD4F2D00A8063\FLUTTER_WINDOWS.DLL.RULE
+setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Insiders\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E env FLUTTER_ROOT=C:\Users\VanNeath\flutter PROJECT_DIR=C:\Users\VanNeath\OneDrive\Desktop\food-app FLUTTER_ROOT=C:\Users\VanNeath\flutter FLUTTER_EPHEMERAL_DIR=C:\Users\VanNeath\OneDrive\Desktop\food-app\windows\flutter\ephemeral PROJECT_DIR=C:\Users\VanNeath\OneDrive\Desktop\food-app FLUTTER_TARGET=C:\Users\VanNeath\OneDrive\Desktop\food-app\lib\homepage.dart DART_DEFINES=RkxVVFRFUl9WRVJTSU9OPTMuMzguNw==,RkxVVFRFUl9DSEFOTkVMPXN0YWJsZQ==,RkxVVFRFUl9HSVRfVVJMPWh0dHBzOi8vZ2l0aHViLmNvbS9mbHV0dGVyL2ZsdXR0ZXIuZ2l0,RkxVVFRFUl9GUkFNRVdPUktfUkVWSVNJT049M2I2MmVmYzJhMw==,RkxVVFRFUl9FTkdJTkVfUkVWSVNJT049NzhmYzMwMTJlNA==,RkxVVFRFUl9EQVJUX1ZFUlNJT049My4xMC43 DART_OBFUSCATION=false TRACK_WIDGET_CREATION=true TREE_SHAKE_ICONS=false PACKAGE_CONFIG=C:\Users\VanNeath\OneDrive\Desktop\food-app\.dart_tool\package_config.json C:/Users/VanNeath/flutter/packages/flutter_tools/bin/tool_backend.bat windows-x64 Debug
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\VANNEATH\ONEDRIVE\DESKTOP\FOOD-APP\BUILD\WINDOWS\X64\CMAKEFILES\2EC6ADE01E930342B79CE87B4212A3B3\FLUTTER_ASSEMBLE.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^C:\USERS\VANNEATH\ONEDRIVE\DESKTOP\FOOD-APP\WINDOWS\FLUTTER\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\Microsoft Visual Studio\18\Insiders\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SC:/Users/VanNeath/OneDrive/Desktop/food-app/windows -BC:/Users/VanNeath/OneDrive/Desktop/food-app/build/windows/x64 --check-stamp-file C:/Users/VanNeath/OneDrive/Desktop/food-app/build/windows/x64/flutter/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

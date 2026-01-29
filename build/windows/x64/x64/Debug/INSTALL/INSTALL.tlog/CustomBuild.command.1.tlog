@@ -1,0 +1,10 @@
+^C:\USERS\VANNEATH\ONEDRIVE\DESKTOP\FOOD-APP\BUILD\WINDOWS\X64\CMAKEFILES\EDCB594A73ED8ABCB34EF13FB406DA78\INSTALL_FORCE.RULE
+setlocal
+cd .
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
