@@ -33,16 +33,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int selectedIndex = 0;
 
-  final List<Widget> pages = [
-    const HomePage(title: 'Home'),
-    const DrinkPage(title: 'Drinks Page'),
-    const Bergerpage(title: 'Burgers Page'),
+  final List<Widget> pages = const [
+    HomePage(title: 'Home'),
+    DrinkPage(title: 'Drinks Page'),
+    Bergerpage(title: 'Burgers Page'),
     pizza.PizzaPage(title: 'Pizza Page'),
   ];
-
-  bool isDesktop(BuildContext context) {
-    return MediaQuery.of(context).size.width >= 700;
-  }
 
   void onItemTapped(int index) {
     setState(() {
@@ -52,11 +48,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final desktop = isDesktop(context);
+    final bool isDesktop = MediaQuery.of(context).size.width >= 700;
 
     return Scaffold(
-      /// 🔁 BODY CHANGES ONLY
-      body: desktop
+      appBar: AppBar(
+        title: Text(pages[selectedIndex] is HomePage ? 'Food Menu' : (pages[selectedIndex] as dynamic).title),
+        centerTitle: true,
+      ),
+
+      body: isDesktop
           ? Row(
               children: [
                 NavigationRail(
@@ -76,13 +76,13 @@ class _MyHomePageState extends State<MyHomePage> {
             )
           : pages[selectedIndex],
 
-      /// 📱 Bottom menu for mobile
-      bottomNavigationBar: desktop
+      bottomNavigationBar: isDesktop
           ? null
           : BottomNavigationBar(
               currentIndex: selectedIndex,
               onTap: onItemTapped,
               selectedItemColor: Colors.orange,
+              type: BottomNavigationBarType.fixed,
               items: const [
                 BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
                 BottomNavigationBarItem(icon: Icon(Icons.local_drink), label: "Drinks"),
