@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 
@@ -12,66 +10,44 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Food App',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange), useMaterial3: true),
-      home: const HomePage(title: 'Food Menu'),
-    );
+    return MaterialApp(debugShowCheckedModeBanner: false, home: const HomePage());
   }
 }
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key, required this.title});
-  final String title;
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-      ),
-      extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFFFF9F2), Color(0xFFFDE2FF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(top: 100, bottom: 40),
-          child: Column(
-            children: const [
-              CategoryHighlight(
-                title: 'Refreshments',
-                images: ['assets/drinks.png', 'assets/drinks2.png', 'assets/drinks3.png'],
-                mobileHeight: 350,
-                desktopHeight: 400,
-                aspectRatio: 0.7,
-              ),
-              SizedBox(height: 30),
-              CategoryHighlight(
-                title: 'Hot Pizza',
-                images: ['assets/aizza.png', 'assets/aizza2.png', 'assets/aizza3.png'],
-                mobileHeight: 300,
-                desktopHeight: 350,
-                aspectRatio: 1.0,
-              ),
-              SizedBox(height: 30),
-              CategoryHighlight(
-                title: 'Gourmet Burgers',
-                images: ['assets/berger.png', 'assets/berger2.png', 'assets/berger3.png'],
-                mobileHeight: 250,
-                desktopHeight: 300,
-                aspectRatio: 1.1,
-              ),
-            ],
-          ),
+      backgroundColor: const Color(0xFFFDE2FF),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            CategoryHighlight(
+              title: 'Refreshments',
+              autoSlideDuration: Duration(seconds: 3),
+              foodData: [
+                {'name': 'drinks', 'image': 'assets/drinks/drinks.png', 'price': '\$2.50'},
+                {'name': 'brownsugar', 'image': 'assets/drinks/brownsugar.png', 'price': '\$4.50'},
+                {'name': 'coffee', 'image': 'assets/drinks/coffee.png', 'price': '\$3.00'},
+                {'name': 'coke', 'image': 'assets/drinks/coke.png', 'price': '\$2.00'},
+                {'name': 'icedcappuccino', 'image': 'assets/drinks/icedcappuccino.png', 'price': '\$4.00'},
+              ],
+            ),
+            SizedBox(height: 20),
+            CategoryHighlight(
+              title: 'Hot Pizza',
+              autoSlideDuration: Duration(seconds: 5),
+              foodData: [
+                {'name': 'pizza', 'image': 'assets/pizza/pizza.png', 'price': '\$12.00'},
+                {'name': 'ISPizza', 'image': 'assets/pizza/ISPizza.png', 'price': '\$15.00'},
+                {'name': 'pizza3', 'image': 'assets/pizza/pizza3.png', 'price': '\$14.00'},
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -80,19 +56,10 @@ class HomePage extends StatelessWidget {
 
 class CategoryHighlight extends StatefulWidget {
   final String title;
-  final List<String> images;
-  final double mobileHeight;
-  final double desktopHeight;
-  final double aspectRatio;
+  final List<Map<String, String>> foodData;
+  final Duration autoSlideDuration;
 
-  const CategoryHighlight({
-    super.key,
-    required this.title,
-    required this.images,
-    required this.mobileHeight,
-    required this.desktopHeight,
-    required this.aspectRatio,
-  });
+  const CategoryHighlight({super.key, required this.title, required this.foodData, required this.autoSlideDuration});
 
   @override
   State<CategoryHighlight> createState() => _CategoryHighlightState();
@@ -100,24 +67,25 @@ class CategoryHighlight extends StatefulWidget {
 
 class _CategoryHighlightState extends State<CategoryHighlight> {
   late PageController _pageController;
-  int _currentPage = 0;
+  int _currentIndex = 0;
   Timer? _timer;
-  bool _isDesktop = false;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.8);
+    // Reduced fraction to 0.22 to bring cards very close together
+    _pageController = PageController(viewportFraction: 0.22, keepPage: true);
 
-    _timer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (!_isDesktop && mounted) {
-        _currentPage++;
-        if (_currentPage >= widget.images.length) _currentPage = 0;
-
+    _timer = Timer.periodic(widget.autoSlideDuration, (timer) {
+      if (!mounted) return;
+      setState(() {
+        _currentIndex = (_currentIndex + 1) % widget.foodData.length;
+      });
+      if (_pageController.hasClients) {
         _pageController.animateToPage(
-          _currentPage,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.decelerate,
+          _currentIndex,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOutCubic,
         );
       }
     });
@@ -132,67 +100,62 @@ class _CategoryHighlightState extends State<CategoryHighlight> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        _isDesktop = constraints.maxWidth >= 700;
-        double currentHeight = _isDesktop ? widget.desktopHeight : widget.mobileHeight;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25),
-              child: Text(widget.title, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
-            ),
-            const SizedBox(height: 15),
-            SizedBox(
-              height: currentHeight,
-              child: _isDesktop
-                  // Desktop: horizontal scrolling list
-                  ? ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      itemCount: widget.images.length,
-                      itemBuilder: (context, index) => _buildImageCard(
-                        widget.images[index],
-                        currentHeight * widget.aspectRatio,
-                        currentHeight,
-                        true,
-                      ),
-                    )
-                  // Mobile: carousel slider
-                  : PageView.builder(
-                      controller: _pageController,
-                      itemCount: widget.images.length,
-                      itemBuilder: (context, index) =>
-                          _buildImageCard(widget.images[index], double.infinity, currentHeight, false),
-                    ),
-            ),
-          ],
-        );
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 20, bottom: 10),
+          child: Text(widget.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+        ),
+        SizedBox(
+          height: 200, // Reduced height so cards don't look "tall/heavy"
+          child: PageView.builder(
+            controller: _pageController,
+            padEnds: false, // Keeps the first item aligned to the left
+            itemCount: widget.foodData.length,
+            onPageChanged: (index) => setState(() => _currentIndex = index),
+            itemBuilder: (context, index) {
+              bool isHighlighted = _currentIndex == index;
+              return AnimatedScale(
+                scale: isHighlighted ? 1.0 : 0.9,
+                duration: const Duration(milliseconds: 500),
+                child: _buildItemCard(widget.foodData[index], isHighlighted),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildImageCard(String path, double width, double height, bool isDesktop) {
+  Widget _buildItemCard(Map<String, String> item, bool isHighlighted) {
     return Container(
-      width: isDesktop ? width : null,
-      margin: EdgeInsets.symmetric(horizontal: isDesktop ? 10 : 8, vertical: 5),
+      margin: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(25),
-        color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 8))],
+        borderRadius: BorderRadius.circular(15),
+        color: Colors.white.withOpacity(isHighlighted ? 0.9 : 0.5),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(25),
-        child: Image.asset(
-          path,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => Container(
-            color: Colors.grey[200],
-            child: const Icon(Icons.fastfood, color: Colors.grey),
+      child: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Image.asset(
+                item['image']!,
+                fit: BoxFit.contain, // Ensures image doesn't get cut off
+              ),
+            ),
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Column(
+              children: [
+                Text(item['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                Text(item['price']!, style: const TextStyle(color: Colors.orange, fontSize: 10)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

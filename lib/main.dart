@@ -35,7 +35,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final List<String> pageTitles = const ['Food Menu', 'Drinks', 'Burgers', 'Pizza'];
 
   final List<Widget> pages = const [
-    HomePage(title: 'Home'),
+    HomePage(),
     DrinkPage(title: 'Drinks Page'),
     Bergerpage(title: 'Burgers Page'),
     pizza.PizzaPage(title: 'Pizza Page'),
