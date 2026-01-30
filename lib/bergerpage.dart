@@ -1,52 +1,7 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const Bergerpage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
 class Bergerpage extends StatefulWidget {
   const Bergerpage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -54,65 +9,180 @@ class Bergerpage extends StatefulWidget {
 }
 
 class _BergerpageState extends State<Bergerpage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  final List<Map<String, String>> burgers = [
+    {'name': 'The Classic Cheeseburger', 'image': 'assets/burger/berger.png'},
+    {'name': 'Bacon Barbecue Burger', 'image': 'assets/burger/baconbarbecue.png'},
+    {'name': 'Breakfast Bap', 'image': 'assets/burger/breakfastbap.png'},
+    {'name': 'Double Smash Burger', 'image': 'assets/burger/doublesmash.png'},
+    {'name': 'Mushroom Swiss Burger', 'image': 'assets/burger/mushroomswiss.png'},
+    {'name': 'Spicy Zinger Burger', 'image': 'assets/burger/spicyzinger.png'},
+    {'name': 'The Hawaiian Burger', 'image': 'assets/burger/theawaiian.png'},
+    {'name': 'Truffle Deluxe Burger', 'image': 'assets/burger/truffledeluxe.png'},
+    {'name': 'Wagyu Beef Burger', 'image': 'assets/burger/wagyubeef.png'},
+  ];
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    final double width = MediaQuery.of(context).size.width;
+    int crossAxisCount = width > 900 ? 4 : (width > 600 ? 3 : 2);
+
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+      backgroundColor: const Color.fromARGB(255, 102, 178, 195),
+      body: CustomScrollView(
+        slivers: [
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(20, 40, 20, 10),
+              child: Text("Burger Menu", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverGrid(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                mainAxisExtent: 320, // Height of the card
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => BurgerItemCard(name: burgers[index]['name']!, imagePath: burgers[index]['image']!),
+                childCount: burgers.length,
+              ),
+            ),
+          ),
+        ],
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+    );
+  }
+}
+
+class BurgerItemCard extends StatefulWidget {
+  final String name;
+  final String imagePath;
+  const BurgerItemCard({super.key, required this.name, required this.imagePath});
+
+  @override
+  State<BurgerItemCard> createState() => _BurgerItemCardState();
+}
+
+class _BurgerItemCardState extends State<BurgerItemCard> {
+  String selectedSize = 'S';
+  final double basePrice = 5.50; // Starting price for burgers
+  final Map<String, double> priceAdjustments = {
+    'S': 0.00,
+    'M': 2.00, // Medium usually adds more for burgers (extra patty/fries)
+    'L': 4.50,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    double totalPrice = basePrice + priceAdjustments[selectedSize]!;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 8))],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
           children: [
-            const Text('You have pushed the button this many times:'),
-            Text('$_counter', style: Theme.of(context).textTheme.headlineMedium),
+            // 1. Image section
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Image.asset(
+                  widget.imagePath,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(Icons.lunch_dining_rounded, size: 60, color: Colors.orange.withOpacity(0.3));
+                  },
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // 2. Name
+            Text(
+              widget.name,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+
+            const SizedBox(height: 8),
+
+            // 3. Size Choice Box
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+              decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: selectedSize,
+                  isDense: true,
+                  icon: const Icon(Icons.arrow_drop_down, color: Colors.deepPurple),
+                  style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedSize = newValue!;
+                    });
+                  },
+                  items: ['S', 'M', 'L'].map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text("Size $value", style: const TextStyle(fontSize: 13)),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // 4. Price Tag
+            Text(
+              '\$${totalPrice.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: Color.fromARGB(255, 46, 125, 50),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // 5. Add to Cart Button (Using the same style as your example)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${widget.name} ($selectedSize) added to cart!'),
+                      duration: const Duration(seconds: 1),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: Colors.deepPurple,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add_shopping_cart, size: 18),
+                label: const Text("Add"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  elevation: 0,
+                ),
+              ),
+            ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }

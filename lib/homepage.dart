@@ -22,7 +22,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDE2FF),
+      backgroundColor: const Color.fromARGB(255, 102, 178, 195),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 20),
         child: Column(
@@ -48,7 +48,7 @@ class HomePage extends StatelessWidget {
               foodData: [
                 {'name': 'Garden Veggie Pizza', 'image': 'assets/pizza/pizza.png'},
                 {'name': 'Personal Pepperoni Pizza', 'image': 'assets/pizza/ISPizza.png'},
-                {'name': 'Pizza Bianca Pizza', 'image': 'assets/pizza/pizza3.png'},
+                {'name': 'Pizza Bianca', 'image': 'assets/pizza/pizza3.png'},
                 {'name': 'Quattro Formaggi Pizza', 'image': 'assets/pizza/pizza4.png'},
                 {'name': 'Deluxe pizza', 'image': 'assets/pizza/pizza5.png'},
                 {'name': 'Vegetarian Pizza', 'image': 'assets/pizza/pizza6.png'},
@@ -97,20 +97,39 @@ class _CategoryHighlightState extends State<CategoryHighlight> {
   @override
   void initState() {
     super.initState();
-    // Reduced fraction to 0.22 to bring cards very close together
     _pageController = PageController(viewportFraction: 0.22, keepPage: true);
+    _startTimer(); // Start the initial timer
+  }
 
+  // --- ADDED: Timer logic separated to a function for easier restarting ---
+  void _startTimer() {
+    _timer?.cancel();
     _timer = Timer.periodic(widget.autoSlideDuration, (timer) {
       if (!mounted) return;
+      _animateToNextPage();
+    });
+  }
+
+  void _animateToNextPage() {
+    if (_pageController.hasClients) {
       setState(() {
         _currentIndex = (_currentIndex + 1) % widget.foodData.length;
       });
-      if (_pageController.hasClients) {
-        _pageController.animateToPage(
-          _currentIndex,
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.easeInOutCubic,
-        );
+      _pageController.animateToPage(
+        _currentIndex,
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.easeInOutCubic,
+      );
+    }
+  }
+
+  // --- ADDED: Method to handle user interaction ---
+  void _handleUserInteraction() {
+    _timer?.cancel(); // Stop auto-slide immediately
+    // Wait 3 seconds, then restart the periodic timer
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        _startTimer();
       }
     });
   }
@@ -132,20 +151,29 @@ class _CategoryHighlightState extends State<CategoryHighlight> {
           child: Text(widget.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
         ),
         SizedBox(
-          height: 200, // Reduced height so cards don't look "tall/heavy"
-          child: PageView.builder(
-            controller: _pageController,
-            padEnds: false, // Keeps the first item aligned to the left
-            itemCount: widget.foodData.length,
-            onPageChanged: (index) => setState(() => _currentIndex = index),
-            itemBuilder: (context, index) {
-              bool isHighlighted = _currentIndex == index;
-              return AnimatedScale(
-                scale: isHighlighted ? 1.0 : 0.9,
-                duration: const Duration(milliseconds: 500),
-                child: _buildItemCard(widget.foodData[index], isHighlighted),
-              );
+          height: 200,
+          // --- ADDED: NotificationListener detects when user starts scrolling ---
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (notification is ScrollStartNotification) {
+                _handleUserInteraction();
+              }
+              return true;
             },
+            child: PageView.builder(
+              controller: _pageController,
+              padEnds: false,
+              itemCount: widget.foodData.length,
+              onPageChanged: (index) => setState(() => _currentIndex = index),
+              itemBuilder: (context, index) {
+                bool isHighlighted = _currentIndex == index;
+                return AnimatedScale(
+                  scale: isHighlighted ? 1.0 : 0.9,
+                  duration: const Duration(milliseconds: 500),
+                  child: _buildItemCard(widget.foodData[index], isHighlighted),
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -164,16 +192,17 @@ class _CategoryHighlightState extends State<CategoryHighlight> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Image.asset(
-                item['image']!,
-                fit: BoxFit.contain, // Ensures image doesn't get cut off
-              ),
+              child: Image.asset(item['image']!, fit: BoxFit.contain),
             ),
           ),
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
-            child: Column(
-              children: [Text(item['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11))],
+            child: Text(
+              item['name']!,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
