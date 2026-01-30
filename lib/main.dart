@@ -32,13 +32,25 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int selectedIndex = 0;
 
-  final List<String> pageTitles = const ['Food Menu', 'Drinks', 'Burgers', 'Pizza'];
+  // Updated list of titles including the new "Settings" option
+  final List<String> pageTitles = const ['Food Menu', 'Drinks', 'Burgers', 'Pizza', 'Settings'];
 
+  // Updated list of pages to match the new button
   final List<Widget> pages = const [
     HomePage(),
     DrinkPage(title: 'Drinks Page'),
     Bergerpage(title: 'Burgers Page'),
     pizza.PizzaPage(title: 'Pizza Page'),
+    // Placeholder for the new Settings page
+    Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.settings, size: 100, color: Colors.orange),
+          Text('Settings Page', style: TextStyle(fontSize: 24)),
+        ],
+      ),
+    ),
   ];
 
   void onItemTapped(int index) {
@@ -52,7 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final bool isDesktop = MediaQuery.of(context).size.width >= 700;
 
     return Scaffold(
-      appBar: AppBar(title: Text(pageTitles[selectedIndex]), centerTitle: true),
+      appBar: AppBar(title: Text(pageTitles[selectedIndex]), centerTitle: true, elevation: 2),
 
       body: isDesktop
           ? Row(
@@ -61,14 +73,17 @@ class _MyHomePageState extends State<MyHomePage> {
                   selectedIndex: selectedIndex,
                   onDestinationSelected: onItemTapped,
                   labelType: NavigationRailLabelType.all,
+                  selectedIconTheme: const IconThemeData(color: Colors.orange),
+                  selectedLabelTextStyle: const TextStyle(color: Colors.orange),
                   destinations: const [
                     NavigationRailDestination(icon: Icon(Icons.home), label: Text('Home')),
                     NavigationRailDestination(icon: Icon(Icons.local_drink), label: Text('Drinks')),
                     NavigationRailDestination(icon: Icon(Icons.lunch_dining), label: Text('Burgers')),
                     NavigationRailDestination(icon: Icon(Icons.local_pizza), label: Text('Pizza')),
+                    NavigationRailDestination(icon: Icon(Icons.settings), label: Text('Settings')),
                   ],
                 ),
-                const VerticalDivider(width: 1),
+                const VerticalDivider(width: 1, thickness: 1),
                 Expanded(child: pages[selectedIndex]),
               ],
             )
@@ -80,12 +95,15 @@ class _MyHomePageState extends State<MyHomePage> {
               currentIndex: selectedIndex,
               onTap: onItemTapped,
               selectedItemColor: Colors.orange,
+              unselectedItemColor: Colors.grey,
+              // Fixed type ensures all 5 icons and labels are visible simultaneously
               type: BottomNavigationBarType.fixed,
               items: const [
                 BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
                 BottomNavigationBarItem(icon: Icon(Icons.local_drink), label: "Drinks"),
                 BottomNavigationBarItem(icon: Icon(Icons.lunch_dining), label: "Burgers"),
                 BottomNavigationBarItem(icon: Icon(Icons.local_pizza), label: "Pizza"),
+                BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
               ],
             ),
     );
