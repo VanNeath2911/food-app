@@ -5,10 +5,7 @@ import 'package:food_app/bergerpage.dart';
 import 'package:food_app/drinkpage.dart';
 import 'package:food_app/homepage.dart';
 import 'package:food_app/pizzapage.dart';
-
-void main() {
-  runApp(const MyApp());
-}
+import 'package:food_app/accountpage.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -19,25 +16,24 @@ class MyApp extends StatelessWidget {
       title: 'Food App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.orange),
-      home: const MyHomePage(),
+      home: const MainPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+class MainPage extends StatefulWidget {
+  const MainPage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MainPage> createState() => _MainPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MainPageState extends State<MainPage> {
   int selectedIndex = 0;
   late PageController _pageController;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
 
-  // Data lists for search logic
   final List<String> allPizzasnames = [
     'Personal Pepperoni Pizza',
     'Margherita Pizza',
@@ -47,6 +43,7 @@ class _MyHomePageState extends State<MyHomePage> {
     'Deluxe pizza',
     'Vegetarian Pizza',
   ];
+
   final List<String> allburgersnames = [
     'The Classic Cheeseburger',
     'Bacon Barbecue Burger',
@@ -58,6 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
     'Truffle Deluxe Burger',
     'Wagyu Beef Burger',
   ];
+
   final List<String> allDrinkNames = [
     'Brown Sugar',
     'Coke',
@@ -68,14 +66,17 @@ class _MyHomePageState extends State<MyHomePage> {
     'Water',
   ];
 
-  // pages index 4 is Cart, index 5 is About Us
-  final List<Widget> pages = const [
-    HomePage(),
-    DrinkPage(title: 'Drinks Page'),
-    Bergerpage(title: 'Burgers Page'),
-    PizzaPage(title: 'Pizza Page'),
-    Center(child: Text('Shopping Cart Page', style: TextStyle(fontSize: 24))), // Index 4
-    Center(
+  // --- FIXED INDEXING ---
+  // Pages are now ordered 0-6 to match the BottomNav/Rail perfectly
+  final List<Widget> pages = [
+    const HomePage(), // 0
+    const DrinkPage(title: 'Drinks Page'), // 1
+    const Bergerpage(title: 'Burgers Page'), // 2
+    const PizzaPage(title: 'Pizza Page'), // 3
+    const Center(child: Text('Shopping Cart Page', style: TextStyle(fontSize: 24))), // 4
+    const AccountPage(title: 'Account Page'), // 5 (Matches Account Icon)
+    const Center(
+      // 6 (About Us)
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -83,7 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Text('About Us Page', style: TextStyle(fontSize: 24)),
         ],
       ),
-    ), // Index 5
+    ),
   ];
 
   @override
@@ -99,36 +100,21 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  // --- ASYNC NAVIGATION HELPER ---
-  Future<void> _navigateToPage(int index) async {
+  void _navigateToPage(int index) {
     if (index == selectedIndex) return;
+
+    _pageController.animateToPage(index, duration: const Duration(milliseconds: 350), curve: Curves.easeInOut);
 
     setState(() {
       selectedIndex = index;
       _searchQuery = "";
       _searchController.clear();
     });
-
-    // Wait for the page transition to complete
-    await _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.fastOutSlowIn,
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     final bool isDesktop = MediaQuery.of(context).size.width >= 700;
-
-    List<String> suggestions = [];
-    if (_searchQuery.isNotEmpty) {
-      suggestions = [
-        ...allPizzasnames.where((food) => food.toLowerCase().contains(_searchQuery.toLowerCase())),
-        ...allburgersnames.where((food) => food.toLowerCase().contains(_searchQuery.toLowerCase())),
-        ...allDrinkNames.where((food) => food.toLowerCase().contains(_searchQuery.toLowerCase())),
-      ];
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -163,33 +149,11 @@ class _MyHomePageState extends State<MyHomePage> {
             children: [
               if (isDesktop) ...[
                 NavigationRail(
-                  selectedIndex: selectedIndex == 5 ? null : selectedIndex,
+                  // FIXED: Index 6 is the "About Us" button in trailing, so Rail index stops at 5
+                  selectedIndex: selectedIndex > 5 ? null : selectedIndex,
                   onDestinationSelected: _navigateToPage,
                   labelType: NavigationRailLabelType.all,
                   selectedIconTheme: const IconThemeData(color: Color.fromARGB(255, 96, 171, 198), size: 30),
-                  // Pushing About Us to the bottom
-                  trailing: Expanded(
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 20.0),
-                        child: InkWell(
-                          onTap: () => _navigateToPage(5), // Index 5
-                          borderRadius: BorderRadius.circular(10),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.info,
-                                color: selectedIndex == 5 ? const Color.fromARGB(255, 96, 171, 198) : Colors.grey,
-                              ),
-                              const Text('About Us', style: TextStyle(fontSize: 12)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                   destinations: const [
                     NavigationRailDestination(
                       icon: Icon(Icons.home_outlined),
@@ -216,7 +180,35 @@ class _MyHomePageState extends State<MyHomePage> {
                       selectedIcon: Icon(Icons.shopping_cart),
                       label: Text('Cart'),
                     ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.person_outline),
+                      selectedIcon: Icon(Icons.person),
+                      label: Text('Account'),
+                    ),
                   ],
+                  trailing: Expanded(
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 20.0),
+                        child: InkWell(
+                          onTap: () => _navigateToPage(6),
+                          borderRadius: BorderRadius.circular(10),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.info,
+                                // Indicator for About Us page
+                                color: selectedIndex == 6 ? const Color.fromARGB(255, 96, 171, 198) : Colors.grey,
+                              ),
+                              const Text('About Us', style: TextStyle(fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
                 const VerticalDivider(width: 1),
               ],
@@ -229,35 +221,16 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ],
           ),
-          // Suggestions Overlay
-          if (suggestions.isNotEmpty)
-            Positioned(
-              top: 5,
-              left: isDesktop ? 90 : 20,
-              right: 20,
-              child: Material(
-                elevation: 10,
-                borderRadius: BorderRadius.circular(15),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: suggestions.length,
-                  itemBuilder: (context, index) {
-                    final result = suggestions[index];
-                    return ListTile(
-                      title: Text(result),
-                      onTap: () {
-                        if (allDrinkNames.contains(result))
-                          _navigateToPage(1);
-                        else if (allburgersnames.contains(result))
-                          _navigateToPage(2);
-                        else if (allPizzasnames.contains(result))
-                          _navigateToPage(3);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
+
+          /// 🔍 SEARCH SUGGESTIONS (PRESERVED)
+          SearchSuggestions(
+            query: _searchQuery,
+            pizzas: allPizzasnames,
+            burgers: allburgersnames,
+            drinks: allDrinkNames,
+            onNavigate: _navigateToPage,
+            isDesktop: isDesktop,
+          ),
         ],
       ),
       bottomNavigationBar: isDesktop
@@ -291,12 +264,79 @@ class _MyHomePageState extends State<MyHomePage> {
                   label: "Cart",
                 ),
                 BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline),
+                  activeIcon: Icon(Icons.person),
+                  label: "Account",
+                ),
+                BottomNavigationBarItem(
                   icon: Icon(Icons.info_outline),
                   activeIcon: Icon(Icons.info),
                   label: "About Us",
                 ),
               ],
             ),
+    );
+  }
+}
+
+// SearchSuggestions widget definition (basic placeholder)
+class SearchSuggestions extends StatelessWidget {
+  final String query;
+  final List<String> pizzas;
+  final List<String> burgers;
+  final List<String> drinks;
+  final Function(int) onNavigate;
+  final bool isDesktop;
+
+  const SearchSuggestions({
+    Key? key,
+    required this.query,
+    required this.pizzas,
+    required this.burgers,
+    required this.drinks,
+    required this.onNavigate,
+    required this.isDesktop,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    if (query.isEmpty) return const SizedBox.shrink();
+
+    final List<String> suggestions = [
+      ...pizzas.where((p) => p.toLowerCase().contains(query.toLowerCase())),
+      ...burgers.where((b) => b.toLowerCase().contains(query.toLowerCase())),
+      ...drinks.where((d) => d.toLowerCase().contains(query.toLowerCase())),
+    ];
+
+    if (suggestions.isEmpty) return const SizedBox.shrink();
+
+    return Positioned(
+      left: isDesktop ? 250 : 0,
+      right: 0,
+      top: kToolbarHeight,
+      child: Material(
+        elevation: 4,
+        child: ListView(
+          shrinkWrap: true,
+          children: suggestions
+              .map(
+                (s) => ListTile(
+                  title: Text(s),
+                  onTap: () {
+                    // Example: navigate to Pizza, Burger, or Drink page
+                    if (pizzas.contains(s)) {
+                      onNavigate(3); // Pizza page index
+                    } else if (burgers.contains(s)) {
+                      onNavigate(2); // Burger page index
+                    } else if (drinks.contains(s)) {
+                      onNavigate(1); // Drink page index
+                    }
+                  },
+                ),
+              )
+              .toList(),
+        ),
+      ),
     );
   }
 }

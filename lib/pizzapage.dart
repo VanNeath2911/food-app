@@ -1,105 +1,158 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const PizzaPage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
 class PizzaPage extends StatefulWidget {
   const PizzaPage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
   State<PizzaPage> createState() => _PizzaPageState();
 }
 
-class _PizzaPageState extends State<PizzaPage> {
-  int _counter = 0;
+class _PizzaPageState extends State<PizzaPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  final List<Map<String, String>> pizzas = const [
+    {'name': 'Personal Pepperoni Pizza', 'image': 'assets/pizza/ISPizza.png'},
+    {'name': 'Margherita Pizza', 'image': 'assets/pizza/pizza.png'},
+    {'name': 'Pizza Bianca', 'image': 'assets/pizza/pizza3.png'},
+    {'name': 'Garden Veggie Pizza', 'image': 'assets/pizza/pizza4.png'},
+    {'name': 'Quattro Formaggi Pizza', 'image': 'assets/pizza/pizza5.png'},
+    {'name': 'Deluxe pizza', 'image': 'assets/pizza/pizza6.png'},
+    {'name': 'Vegetarian Pizza', 'image': 'assets/pizza/pizza7.png'},
+  ];
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    super.build(context);
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+      backgroundColor: const Color(0xFF66B2C3),
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
-          mainAxisAlignment: .center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('You have pushed the button this many times:'),
-            Text('$_counter', style: Theme.of(context).textTheme.headlineMedium),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
+              child: Text(
+                "Pizza Menu",
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1.2),
+              ),
+            ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final int crossAxisCount = constraints.maxWidth > 900 ? 4 : 2;
+                return Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      mainAxisSpacing: 15,
+                      crossAxisSpacing: 15,
+                      childAspectRatio: 0.72,
+                    ),
+                    itemCount: pizzas.length,
+                    itemBuilder: (context, index) {
+                      return PizzaItemCard(name: pizzas[index]['name']!, imagePath: pizzas[index]['image']!);
+                    },
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+    );
+  }
+}
+
+class PizzaItemCard extends StatefulWidget {
+  final String name;
+  final String imagePath;
+  const PizzaItemCard({super.key, required this.name, required this.imagePath});
+
+  @override
+  State<PizzaItemCard> createState() => _PizzaItemCardState();
+}
+
+class _PizzaItemCardState extends State<PizzaItemCard> {
+  String selectedSize = 'S';
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28)),
+      child: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Image.asset(widget.imagePath, fit: BoxFit.contain),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Column(
+              children: [
+                Text(
+                  widget.name,
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+
+                // --- SIZE PICKER STYLED LIKE YOUR IMAGE ---
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F3F9), // Light grey background
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: selectedSize,
+                      isDense: true,
+                      icon: const Icon(Icons.arrow_drop_down, color: Colors.deepPurple),
+                      style: const TextStyle(color: Colors.black54, fontSize: 13),
+                      onChanged: (val) => setState(() => selectedSize = val!),
+                      items: ['S', 'M', 'L'].map((s) => DropdownMenuItem(value: s, child: Text("Size $s"))).toList(),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+                const Text(
+                  '\$5.50',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+          // Add Button
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: ElevatedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.add_shopping_cart, size: 18),
+                label: const Text("Add"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF673AB7), // Purple color from image
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

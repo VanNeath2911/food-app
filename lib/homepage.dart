@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,7 +13,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, home: const HomePage());
+    return const MaterialApp(debugShowCheckedModeBanner: false, home: HomePage());
   }
 }
 
@@ -25,9 +26,9 @@ class HomePage extends StatelessWidget {
       backgroundColor: const Color.fromARGB(255, 102, 178, 195),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
+        child: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             CategoryHighlight(
               title: 'Refreshments',
               autoSlideDuration: Duration(seconds: 3),
@@ -90,47 +91,35 @@ class CategoryHighlight extends StatefulWidget {
 }
 
 class _CategoryHighlightState extends State<CategoryHighlight> {
-  late PageController _pageController;
+  late final PageController _pageController;
   int _currentIndex = 0;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.22, keepPage: true);
-    _startTimer(); // Start the initial timer
+    _pageController = PageController(viewportFraction: 0.22);
+    _startTimer();
   }
 
-  // --- ADDED: Timer logic separated to a function for easier restarting ---
   void _startTimer() {
     _timer?.cancel();
-    _timer = Timer.periodic(widget.autoSlideDuration, (timer) {
-      if (!mounted) return;
-      _animateToNextPage();
+    _timer = Timer.periodic(widget.autoSlideDuration, (_) {
+      if (!mounted || !_pageController.hasClients) return;
+      _currentIndex = (_currentIndex + 1) % widget.foodData.length;
+      _pageController.animateToPage(
+        _currentIndex,
+        duration: const Duration(milliseconds: 700),
+        curve: Curves.easeInOut,
+      );
+      setState(() {}); // only updates scale highlight
     });
   }
 
-  void _animateToNextPage() {
-    if (_pageController.hasClients) {
-      setState(() {
-        _currentIndex = (_currentIndex + 1) % widget.foodData.length;
-      });
-      _pageController.animateToPage(
-        _currentIndex,
-        duration: const Duration(milliseconds: 800),
-        curve: Curves.easeInOutCubic,
-      );
-    }
-  }
-
-  // --- ADDED: Method to handle user interaction ---
   void _handleUserInteraction() {
-    _timer?.cancel(); // Stop auto-slide immediately
-    // Wait 3 seconds, then restart the periodic timer
+    _timer?.cancel();
     Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        _startTimer();
-      }
+      if (mounted) _startTimer();
     });
   }
 
@@ -143,69 +132,84 @@ class _CategoryHighlightState extends State<CategoryHighlight> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 20, bottom: 10),
-          child: Text(widget.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-        ),
-        SizedBox(
-          height: 200,
-          // --- ADDED: NotificationListener detects when user starts scrolling ---
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              if (notification is ScrollStartNotification) {
-                _handleUserInteraction();
-              }
-              return true;
-            },
-            child: PageView.builder(
-              controller: _pageController,
-              padEnds: false,
-              itemCount: widget.foodData.length,
-              onPageChanged: (index) => setState(() => _currentIndex = index),
-              itemBuilder: (context, index) {
-                bool isHighlighted = _currentIndex == index;
-                return AnimatedScale(
-                  scale: isHighlighted ? 1.0 : 0.9,
-                  duration: const Duration(milliseconds: 500),
-                  child: _buildItemCard(widget.foodData[index], isHighlighted),
-                );
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildItemCard(Map<String, String> item, bool isHighlighted) {
-    return Container(
-      margin: const EdgeInsets.all(5),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        color: Colors.white.withOpacity(isHighlighted ? 0.9 : 0.5),
-      ),
+    return RepaintBoundary(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.asset(item['image']!, fit: BoxFit.contain),
-            ),
-          ),
           Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: Text(
-              item['name']!,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            padding: const EdgeInsets.only(left: 20, bottom: 10),
+            child: Text(widget.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          ),
+          SizedBox(
+            height: 200,
+            child: NotificationListener<UserScrollNotification>(
+              onNotification: (notification) {
+                if (notification.direction != ScrollDirection.idle) {
+                  _handleUserInteraction();
+                }
+                return false; // IMPORTANT: don't block scroll performance
+              },
+              child: PageView.builder(
+                controller: _pageController,
+                padEnds: false,
+                itemCount: widget.foodData.length,
+                onPageChanged: (index) => setState(() => _currentIndex = index),
+                itemBuilder: (context, index) {
+                  final isHighlighted = _currentIndex == index;
+                  return AnimatedScale(
+                    scale: isHighlighted ? 1.0 : 0.9,
+                    duration: const Duration(milliseconds: 400),
+                    child: _FoodCard(item: widget.foodData[index], highlight: isHighlighted),
+                  );
+                },
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FoodCard extends StatelessWidget {
+  final Map<String, String> item;
+  final bool highlight;
+
+  const _FoodCard({required this.item, required this.highlight});
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: Container(
+        margin: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          color: Colors.white.withOpacity(highlight ? 0.9 : 0.5),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Image.asset(
+                  item['image']!,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.low, // smoother scrolling
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Text(
+                item['name']!,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

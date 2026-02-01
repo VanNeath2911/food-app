@@ -41,14 +41,14 @@ class _BergerpageState extends State<Bergerpage> {
             sliver: SliverGrid(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
-                mainAxisExtent: 320, // Height of the card
-                crossAxisSpacing: 15,
                 mainAxisSpacing: 15,
+                crossAxisSpacing: 15,
+                mainAxisExtent: 320, // keep your card height
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => BurgerItemCard(name: burgers[index]['name']!, imagePath: burgers[index]['image']!),
-                childCount: burgers.length,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final item = burgers[index];
+                return BurgerItemCard(name: item['name'] ?? '', imagePath: item['image'] ?? '');
+              }, childCount: burgers.length),
             ),
           ),
         ],
@@ -60,6 +60,7 @@ class _BergerpageState extends State<Bergerpage> {
 class BurgerItemCard extends StatefulWidget {
   final String name;
   final String imagePath;
+
   const BurgerItemCard({super.key, required this.name, required this.imagePath});
 
   @override
@@ -68,16 +69,13 @@ class BurgerItemCard extends StatefulWidget {
 
 class _BurgerItemCardState extends State<BurgerItemCard> {
   String selectedSize = 'S';
-  final double basePrice = 5.50; // Starting price for burgers
-  final Map<String, double> priceAdjustments = {
-    'S': 0.00,
-    'M': 2.00, // Medium usually adds more for burgers (extra patty/fries)
-    'L': 4.50,
-  };
+
+  final double basePrice = 5.50;
+  final Map<String, double> priceAdjustments = {'S': 0.00, 'M': 2.00, 'L': 4.50};
 
   @override
   Widget build(BuildContext context) {
-    double totalPrice = basePrice + priceAdjustments[selectedSize]!;
+    final double totalPrice = basePrice + (priceAdjustments[selectedSize] ?? 0);
 
     return Container(
       decoration: BoxDecoration(
@@ -89,23 +87,21 @@ class _BurgerItemCardState extends State<BurgerItemCard> {
         padding: const EdgeInsets.all(12.0),
         child: Column(
           children: [
-            // 1. Image section
             Expanded(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(15),
                 child: Image.asset(
                   widget.imagePath,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(Icons.lunch_dining_rounded, size: 60, color: Colors.orange.withOpacity(0.3));
-                  },
+                  cacheWidth: 300, // smoother scrolling
+                  errorBuilder: (_, __, ___) =>
+                      Icon(Icons.lunch_dining_rounded, size: 60, color: Colors.orange.withOpacity(0.3)),
                 ),
               ),
             ),
 
             const SizedBox(height: 10),
 
-            // 2. Name
             Text(
               widget.name,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -116,7 +112,6 @@ class _BurgerItemCardState extends State<BurgerItemCard> {
 
             const SizedBox(height: 8),
 
-            // 3. Size Choice Box
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
               decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
@@ -125,25 +120,24 @@ class _BurgerItemCardState extends State<BurgerItemCard> {
                   value: selectedSize,
                   isDense: true,
                   icon: const Icon(Icons.arrow_drop_down, color: Colors.deepPurple),
-                  style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
                   onChanged: (String? newValue) {
-                    setState(() {
-                      selectedSize = newValue!;
-                    });
+                    if (newValue == null) return;
+                    setState(() => selectedSize = newValue);
                   },
-                  items: ['S', 'M', 'L'].map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text("Size $value", style: const TextStyle(fontSize: 13)),
-                    );
-                  }).toList(),
+                  items: ['S', 'M', 'L']
+                      .map(
+                        (size) => DropdownMenuItem(
+                          value: size,
+                          child: Text("Size $size", style: const TextStyle(fontSize: 13)),
+                        ),
+                      )
+                      .toList(),
                 ),
               ),
             ),
 
             const SizedBox(height: 8),
 
-            // 4. Price Tag
             Text(
               '\$${totalPrice.toStringAsFixed(2)}',
               style: const TextStyle(
@@ -155,7 +149,6 @@ class _BurgerItemCardState extends State<BurgerItemCard> {
 
             const SizedBox(height: 10),
 
-            // 5. Add to Cart Button (Using the same style as your example)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
