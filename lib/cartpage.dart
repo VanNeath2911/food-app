@@ -1,118 +1,162 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-void main() {
-  runApp(const MyApp());
+// 1. DATA MODEL
+class CartItem {
+  final String id;
+  final String name;
+  final String category;
+  final String size;
+  final double price;
+  int quantity;
+  final String? imagePath;
+
+  CartItem({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.size,
+    required this.price,
+    this.quantity = 1,
+    this.imagePath,
+  });
+
+  double get totalPrice => price * quantity;
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+// 2. STATE MANAGER (Singleton)
+class CartProvider extends ChangeNotifier {
+  static final CartProvider _instance = CartProvider._internal();
+  factory CartProvider() => _instance;
+  CartProvider._internal();
 
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const Bergerpage(title: 'Flutter Demo Home Page'),
-    );
+  final List<CartItem> _items = [];
+  List<CartItem> get items => _items;
+
+  double get totalAmount => _items.fold(0, (sum, item) => sum + item.totalPrice);
+
+  void addItem(CartItem newItem) {
+    final index = _items.indexWhere((item) => item.id == newItem.id && item.size == newItem.size);
+    if (index != -1) {
+      _items[index].quantity += 1;
+    } else {
+      _items.add(newItem);
+    }
+    notifyListeners();
+  }
+
+  void removeItem(String id, String size) {
+    final index = _items.indexWhere((item) => item.id == id && item.size == size);
+    if (index != -1) {
+      if (_items[index].quantity > 1) {
+        _items[index].quantity--;
+      } else {
+        _items.removeAt(index);
+      }
+      notifyListeners();
+    }
+  }
+
+  void clear() {
+    _items.clear();
+    notifyListeners();
   }
 }
 
-class Bergerpage extends StatefulWidget {
-  const Bergerpage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
+// 3. UI PAGE
+class CartPage extends StatefulWidget {
+  const CartPage({Key? key, required this.title}) : super(key: key);
   final String title;
 
   @override
-  State<Bergerpage> createState() => _BergerpageState();
+  State<CartPage> createState() => _CartPageState();
 }
 
-class _BergerpageState extends State<Bergerpage> {
-  int _counter = 0;
+class _CartPageState extends State<CartPage> {
+  final CartProvider _cartProvider = CartProvider();
+  bool _isProcessing = false;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _cartProvider.addListener(() => setState(() {}));
+  }
+
+  Future<void> _confirmBooking() async {
+    if (_cartProvider.items.isEmpty) return;
+    setState(() => _isProcessing = true);
+
+    try {
+      // This creates the collection "collection_credential" automatically
+      final docRef = FirebaseFirestore.instance.collection('collection_credential').doc();
+
+      await docRef.set({
+        'orderId': docRef.id,
+        'timestamp': FieldValue.serverTimestamp(),
+        'totalPrice': _cartProvider.totalAmount,
+        'items': _cartProvider.items
+            .map(
+              (item) => {
+                'name': item.name,
+                'size': item.size,
+                'quantity': item.quantity,
+                'price': item.price,
+                'category': item.category,
+              },
+            )
+            .toList(),
+      });
+
+      _cartProvider.clear();
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text("Success"),
+          content: const Text("Booking confirmed and saved to Firebase!"),
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("OK"))],
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+    } finally {
+      setState(() => _isProcessing = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text('$_counter', style: Theme.of(context).textTheme.headlineMedium),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+      appBar: AppBar(title: Text(widget.title), backgroundColor: const Color(0xFF66B2C3)),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: _cartProvider.items.length,
+              itemBuilder: (context, i) {
+                final item = _cartProvider.items[i];
+                return ListTile(
+                  leading: Image.asset(item.imagePath!, width: 50),
+                  title: Text(item.name),
+                  subtitle: Text("Size: ${item.size} x ${item.quantity}"),
+                  trailing: Text("\$${item.totalPrice.toStringAsFixed(2)}"),
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+                backgroundColor: const Color(0xFF66B2C3),
+              ),
+              onPressed: _isProcessing ? null : _confirmBooking,
+              child: _isProcessing
+                  ? const CircularProgressIndicator()
+                  : Text("Confirm Booking (\$${_cartProvider.totalAmount.toStringAsFixed(2)})"),
+            ),
+          ),
+        ],
       ),
     );
   }

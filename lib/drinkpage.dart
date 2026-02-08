@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:food_app/cartprovider.dart';
+import 'cartpage.dart'; // Ensure this points to your CartProvider/CartItem models
 
 class DrinkPage extends StatefulWidget {
   const DrinkPage({super.key, required this.title});
@@ -28,13 +30,11 @@ class _DrinkPageState extends State<DrinkPage> with AutomaticKeepAliveClientMixi
 
     return Scaffold(
       backgroundColor: const Color(0xFF66B2C3),
-      // Added SingleChildScrollView so the Header and Grid scroll together
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- NEW: Drinks Menu Title (Scrolls with the grid) ---
             const Padding(
               padding: EdgeInsets.fromLTRB(20, 40, 20, 10),
               child: Text(
@@ -42,8 +42,6 @@ class _DrinkPageState extends State<DrinkPage> with AutomaticKeepAliveClientMixi
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1.2),
               ),
             ),
-
-            // --- YOUR ORIGINAL FEATURE (LayoutBuilder & GridView) ---
             LayoutBuilder(
               builder: (context, constraints) {
                 final int crossAxisCount = constraints.maxWidth > 900 ? 4 : 2;
@@ -51,10 +49,8 @@ class _DrinkPageState extends State<DrinkPage> with AutomaticKeepAliveClientMixi
                 return Padding(
                   padding: const EdgeInsets.all(12),
                   child: GridView.builder(
-                    // These two lines are added so the Grid doesn't conflict with the ScrollView
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    cacheExtent: 800,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossAxisCount,
                       mainAxisSpacing: 15,
@@ -77,7 +73,6 @@ class _DrinkPageState extends State<DrinkPage> with AutomaticKeepAliveClientMixi
   }
 }
 
-// --- YOUR ORIGINAL DrinkItemCard (UNTOUCHED) ---
 class DrinkItemCard extends StatefulWidget {
   final String name;
   final String imagePath;
@@ -90,7 +85,6 @@ class DrinkItemCard extends StatefulWidget {
 
 class _DrinkItemCardState extends State<DrinkItemCard> {
   String selectedSize = 'S';
-
   static const double basePrice = 2.00;
   static const Map<String, double> priceAdjustments = {'S': 0.00, 'M': 0.75, 'L': 1.50};
 
@@ -108,24 +102,19 @@ class _DrinkItemCardState extends State<DrinkItemCard> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Column(
           children: [
-            /// Drink Image
             Expanded(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(18),
                 child: Image.asset(
                   widget.imagePath,
                   fit: BoxFit.contain,
-                  filterQuality: FilterQuality.low,
                   errorBuilder: (context, error, stackTrace) {
                     return Icon(Icons.local_drink_rounded, size: 55, color: Colors.deepPurple.withOpacity(0.25));
                   },
                 ),
               ),
             ),
-
             const SizedBox(height: 12),
-
-            /// Drink Name
             Text(
               widget.name,
               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
@@ -133,10 +122,7 @@ class _DrinkItemCardState extends State<DrinkItemCard> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-
             const SizedBox(height: 8),
-
-            /// Size Selector
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(20)),
@@ -161,28 +147,35 @@ class _DrinkItemCardState extends State<DrinkItemCard> {
                 ),
               ),
             ),
-
             const SizedBox(height: 8),
-
-            /// Price
             Text(
               '\$${totalPrice.toStringAsFixed(2)}',
               style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: Color(0xFF2E7D32)),
             ),
-
             const SizedBox(height: 12),
-
-            /// Add Button
             SizedBox(
               width: double.infinity,
               height: 40,
               child: ElevatedButton.icon(
                 onPressed: () {
+                  // Add to Global Cart
+                  CartProvider().addItem(
+                    CartItem(
+                      id: '${widget.name.replaceAll(' ', '_')}_$selectedSize',
+                      name: widget.name,
+                      category: 'drink',
+                      size: selectedSize,
+                      price: totalPrice,
+                      imagePath: widget.imagePath,
+                    ),
+                  );
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('${widget.name} ($selectedSize) added!'),
                       duration: const Duration(seconds: 1),
                       behavior: SnackBarBehavior.floating,
+                      backgroundColor: Colors.deepPurple,
                     ),
                   );
                 },

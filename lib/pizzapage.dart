@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:food_app/cartprovider.dart';
+import 'cartpage.dart'; // Ensure this points to your CartProvider/CartItem models
 
 class PizzaPage extends StatefulWidget {
   const PizzaPage({super.key, required this.title});
@@ -79,9 +81,13 @@ class PizzaItemCard extends StatefulWidget {
 
 class _PizzaItemCardState extends State<PizzaItemCard> {
   String selectedSize = 'S';
+  final double basePrice = 8.50;
+  final Map<String, double> priceAdjustments = {'S': 0.00, 'M': 3.50, 'L': 6.00};
 
   @override
   Widget build(BuildContext context) {
+    final double totalPrice = basePrice + priceAdjustments[selectedSize]!;
+
     return Container(
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28)),
       child: Column(
@@ -104,14 +110,9 @@ class _PizzaItemCardState extends State<PizzaItemCard> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 8),
-
-                // --- SIZE PICKER STYLED LIKE YOUR IMAGE ---
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3F3F9), // Light grey background
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+                  decoration: BoxDecoration(color: const Color(0xFFF3F3F9), borderRadius: BorderRadius.circular(20)),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: selectedSize,
@@ -123,28 +124,48 @@ class _PizzaItemCardState extends State<PizzaItemCard> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 8),
-                const Text(
-                  '\$5.50',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
+                Text(
+                  '\$${totalPrice.toStringAsFixed(2)}',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
                 ),
                 const SizedBox(height: 12),
               ],
             ),
           ),
-          // Add Button
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             child: SizedBox(
               width: double.infinity,
               height: 40,
               child: ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  // Accessing the CartProvider logic from cartpage.dart
+                  final cartProvider = CartProvider();
+                  cartProvider.addItem(
+                    CartItem(
+                      id: '${widget.name.replaceAll(' ', '_')}_$selectedSize',
+                      name: widget.name,
+                      category: 'pizza',
+                      size: selectedSize,
+                      price: totalPrice,
+                      imagePath: widget.imagePath,
+                    ),
+                  );
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${widget.name} ($selectedSize) added to cart!'),
+                      backgroundColor: Colors.deepPurple,
+                      duration: const Duration(seconds: 1),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
                 icon: const Icon(Icons.add_shopping_cart, size: 18),
                 label: const Text("Add"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF673AB7), // Purple color from image
+                  backgroundColor: const Color(0xFF673AB7),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 0,

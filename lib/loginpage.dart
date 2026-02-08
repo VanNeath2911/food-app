@@ -130,7 +130,8 @@ class _LoginPageState extends State<LoginPage> {
                           String password = controller_password.text;
 
                           await db
-                              .collection("collection_user")
+                              // .collection("collection_user")
+                              .collection("collection_credential")
                               .where("username", isEqualTo: username)
                               .where("password", isEqualTo: password)
                               .get()
