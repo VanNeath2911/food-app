@@ -1,13 +1,12 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, duplicate_import
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart'; // ប្រាកដថាអ្នកមាន file នេះ
-import 'main.dart';
+import 'firebase_options.dart';
+import 'main.dart'; // កែឈ្មោះឱ្យត្រូវតាម file របស់អ្នក (ឧទាហរណ៍៖ main_page.dart)
 import 'registerpage.dart';
 
 void main() async {
-  // ១. ចាំបាច់ត្រូវមាន ដើម្បីដំណើរការ Firebase មុនពេល App បើក
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
@@ -21,7 +20,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: const Color(0xFF66B2C3)),
-      // ២. កំណត់ឱ្យ LoginPage ជាទំព័រដំបូង
       home: const LoginPage(),
     );
   }
@@ -46,21 +44,19 @@ class _LoginPageState extends State<LoginPage> {
     final pass = controllerPassword.text.trim();
 
     if (user.isEmpty || pass.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("សូមបំពេញឱ្យគ្រប់ចន្លោះ")));
+      _showError("Please fill in all fields.");
       return;
     }
 
     setState(() => isLoading = true);
 
     try {
-      // ឆែក Username ក្នុង Firestore (Collection: collection_credential)
       DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection("collection_credential").doc(user).get();
 
       if (userDoc.exists) {
         String dbPassword = userDoc.get('password');
 
         if (dbPassword == pass) {
-          // ៣. បញ្ជូនទៅ MainPage ដោយប្រើ parameter ដើមរបស់អ្នក
           if (!mounted) return;
           Navigator.pushReplacement(
             context,
@@ -69,20 +65,20 @@ class _LoginPageState extends State<LoginPage> {
             ),
           );
         } else {
-          _showError("លេខកូដសម្ងាត់មិនត្រឹមត្រូវ");
+          _showError("Incorrect password. Please try again!");
         }
       } else {
-        _showError("រកមិនឃើញគណនីនេះទេ");
+        _showError("User not found.");
       }
     } catch (e) {
-      _showError("មានបញ្ហា: $e");
+      _showError("An error occurred. Please check your internet.");
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
   }
 
   void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.redAccent));
   }
 
   @override
@@ -91,31 +87,60 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: Colors.white,
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(30),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Logo
               Icon(Icons.restaurant_menu, size: 80, color: primaryColor),
-              const SizedBox(height: 10),
-              const Text("WELCOME", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
+              const Text(
+                "LOGIN",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF66B2C3),
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              // Username Field (Fixed Style)
               _buildField("Username", Icons.person, controllerUsername, false),
+
               const SizedBox(height: 15),
+
+              // Password Field (Fixed Style)
               _buildField("Password", Icons.lock, controllerPassword, true),
+
               const SizedBox(height: 30),
+
+              // Login Button
               SizedBox(
-                width: double.infinity,
+                width: 250, // កំណត់ទំហំឱ្យសមល្មមដូចក្នុងរូបភាព
                 height: 50,
                 child: ElevatedButton(
                   onPressed: isLoading ? null : login,
-                  style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
                   child: isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("LOGIN", style: TextStyle(color: Colors.white)),
+                      : const Text(
+                          "LOGIN",
+                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                 ),
               ),
+
+              const SizedBox(height: 15),
+
+              // Register Link
               TextButton(
                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage())),
-                child: Text("Register New Account", style: TextStyle(color: primaryColor)),
+                child: Text("Register New Account", style: TextStyle(color: primaryColor.withOpacity(0.8))),
               ),
             ],
           ),
@@ -124,20 +149,35 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  // ប្រឡោះ Input ដែលបានកែសម្រួលឱ្យដូចរូបភាព Register (Grey Flat Box)
   Widget _buildField(String hint, IconData icon, TextEditingController ctrl, bool isPass) {
-    return TextField(
-      controller: ctrl,
-      obscureText: isPass ? isPasswordHidden : false,
-      decoration: InputDecoration(
-        labelText: hint,
-        prefixIcon: Icon(icon, color: primaryColor),
-        suffixIcon: isPass
-            ? IconButton(
-                icon: Icon(isPasswordHidden ? Icons.visibility_off : Icons.visibility),
-                onPressed: () => setState(() => isPasswordHidden = !isPasswordHidden),
-              )
-            : null,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+    return Container(
+      width: 300, // កំណត់ទទឹងឱ្យសមនឹងឌីហ្សាញ
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F1F1), // ពណ៌ប្រផេះស្រាលដូចក្នុងរូបភាព
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextField(
+        controller: ctrl,
+        obscureText: isPass ? isPasswordHidden : false,
+        style: const TextStyle(fontSize: 15),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: Colors.grey[500], fontSize: 15),
+          prefixIcon: Icon(icon, color: primaryColor.withOpacity(0.6), size: 20),
+          suffixIcon: isPass
+              ? IconButton(
+                  icon: Icon(
+                    isPasswordHidden ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.grey[400],
+                    size: 18,
+                  ),
+                  onPressed: () => setState(() => isPasswordHidden = !isPasswordHidden),
+                )
+              : null,
+          border: InputBorder.none, // លុបបន្ទាត់ស៊ុមចេញ
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        ),
       ),
     );
   }

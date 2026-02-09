@@ -34,7 +34,7 @@ class _MainPageState extends State<MainPage> {
       // បញ្ជូន Username និង Password ទៅ CartPage ដើម្បីរក្សាទុកក្នុង Doc តែមួយ
       CartPage(userId: widget.userId, password: widget.password),
       OrderHistoryPage(userId: widget.userId),
-      const AccountPage(title: ''),
+      AccountPage(userId: widget.userId),
     ];
   }
 

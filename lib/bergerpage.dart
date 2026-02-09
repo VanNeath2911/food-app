@@ -42,7 +42,7 @@ class _BergerpageState extends State<Bergerpage> with AutomaticKeepAliveClientMi
         content: Text('$name ($size) added to cart!'),
         duration: const Duration(seconds: 1),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.black,
       ),
     );
   }

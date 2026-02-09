@@ -153,14 +153,13 @@ class _PizzaItemCardState extends State<PizzaItemCard> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('${widget.name} ($selectedSize) added!'),
-                      backgroundColor: Colors.deepPurple,
+                      backgroundColor: Colors.black,
                       duration: const Duration(seconds: 1),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
                 },
-                icon: const Icon(Icons.add_shopping_cart, size: 18),
-                label: const Text("Add"),
+                label: const Text("Add to Cart"),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF673AB7),
                   foregroundColor: Colors.white,

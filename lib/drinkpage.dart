@@ -114,8 +114,7 @@ class _DrinkItemCardState extends State<DrinkItemCard> {
               );
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("${widget.name} added!")));
             },
-            icon: const Icon(Icons.add_shopping_cart),
-            label: const Text("Add"),
+            label: const Text("Add to Cart"),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, foregroundColor: Colors.white),
           ),
         ],
