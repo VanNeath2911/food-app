@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:food_app/cartprovider.dart';
-import 'cartpage.dart'; // Ensure this points to your CartProvider/CartItem models
 
 class PizzaPage extends StatefulWidget {
   const PizzaPage({super.key, required this.title});
@@ -140,9 +139,7 @@ class _PizzaItemCardState extends State<PizzaItemCard> {
               height: 40,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  // Accessing the CartProvider logic from cartpage.dart
-                  final cartProvider = CartProvider();
-                  cartProvider.addItem(
+                  CartProvider().addItem(
                     CartItem(
                       id: '${widget.name.replaceAll(' ', '_')}_$selectedSize',
                       name: widget.name,
@@ -155,7 +152,7 @@ class _PizzaItemCardState extends State<PizzaItemCard> {
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('${widget.name} ($selectedSize) added to cart!'),
+                      content: Text('${widget.name} ($selectedSize) added!'),
                       backgroundColor: Colors.deepPurple,
                       duration: const Duration(seconds: 1),
                       behavior: SnackBarBehavior.floating,

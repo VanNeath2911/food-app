@@ -1,17 +1,15 @@
-// ignore_for_file: deprecated_member_use, use_build_context_synchronously, non_constant_identifier_names
-
+// ignore_for_file: use_build_context_synchronously
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/material.dart';
-import 'package:food_app/firebase_options.dart';
-import 'package:food_app/main.dart';
-import 'package:food_app/registerpage.dart';
+import 'firebase_options.dart'; // ប្រាកដថាអ្នកមាន file នេះ
+import 'main.dart';
+import 'registerpage.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Added for Firebase safety
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform).then((_) {
-    print("Firebase connected.");
-  });
+  // ១. ចាំបាច់ត្រូវមាន ដើម្បីដំណើរការ Firebase មុនពេល App បើក
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -21,9 +19,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Food App',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.orange),
+      theme: ThemeData(useMaterial3: true, colorSchemeSeed: const Color(0xFF66B2C3)),
+      // ២. កំណត់ឱ្យ LoginPage ជាទំព័រដំបូង
       home: const LoginPage(),
     );
   }
@@ -37,143 +35,109 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  TextEditingController controller_username = TextEditingController();
-  TextEditingController controller_password = TextEditingController();
+  final TextEditingController controllerUsername = TextEditingController();
+  final TextEditingController controllerPassword = TextEditingController();
+  bool isPasswordHidden = true;
+  bool isLoading = false;
+  final Color primaryColor = const Color(0xFF66B2C3);
 
-  bool is_password_visible = true;
+  Future<void> login() async {
+    final user = controllerUsername.text.trim();
+    final pass = controllerPassword.text.trim();
 
-  FirebaseFirestore db = FirebaseFirestore.instance;
+    if (user.isEmpty || pass.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("សូមបំពេញឱ្យគ្រប់ចន្លោះ")));
+      return;
+    }
 
-  @override
-  void initState() {
-    super.initState();
-    init();
+    setState(() => isLoading = true);
+
+    try {
+      // ឆែក Username ក្នុង Firestore (Collection: collection_credential)
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection("collection_credential").doc(user).get();
+
+      if (userDoc.exists) {
+        String dbPassword = userDoc.get('password');
+
+        if (dbPassword == pass) {
+          // ៣. បញ្ជូនទៅ MainPage ដោយប្រើ parameter ដើមរបស់អ្នក
+          if (!mounted) return;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MainPage(userId: user, password: pass),
+            ),
+          );
+        } else {
+          _showError("លេខកូដសម្ងាត់មិនត្រឹមត្រូវ");
+        }
+      } else {
+        _showError("រកមិនឃើញគណនីនេះទេ");
+      }
+    } catch (e) {
+      _showError("មានបញ្ហា: $e");
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
   }
 
-  void init() async {}
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Determine card width to prevent it from being "too big"
-    double screenWidth = MediaQuery.of(context).size.width;
-    double cardWidth = screenWidth > 600 ? 400 : screenWidth * 0.85;
-
     return Scaffold(
-      // FEATURE: Using your signature Teal background
-      backgroundColor: const Color(0xFF66B2C3),
+      backgroundColor: Colors.white,
       body: Center(
         child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo and Header
-              const Icon(Icons.fastfood, size: 80, color: Colors.white),
+              Icon(Icons.restaurant_menu, size: 80, color: primaryColor),
               const SizedBox(height: 10),
-              const Text(
-                "Welcome Back!",
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
+              const Text("WELCOME", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               const SizedBox(height: 30),
-
-              // THE CARD CONTAINER (Matches your Radius 28 style)
-              Container(
-                width: cardWidth,
-                padding: const EdgeInsets.all(25),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10)),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Username Field
-                    TextField(
-                      controller: controller_username,
-                      decoration: const InputDecoration(
-                        labelText: 'Username',
-                        prefixIcon: Icon(Icons.person_outline),
-                        border: UnderlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Password Field
-                    TextField(
-                      controller: controller_password,
-                      obscureText: is_password_visible,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        border: const UnderlineInputBorder(),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              is_password_visible = !is_password_visible;
-                            });
-                          },
-                          icon: Icon(is_password_visible ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 35),
-
-                    // Login Button (Using your Deep Purple design)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          String username = controller_username.text;
-                          String password = controller_password.text;
-
-                          await db
-                              // .collection("collection_user")
-                              .collection("collection_credential")
-                              .where("username", isEqualTo: username)
-                              .where("password", isEqualTo: password)
-                              .get()
-                              .then((q) {
-                                if (q.docs.isEmpty) {
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).showSnackBar(const SnackBar(content: Text("Login failed. Wrong credentials.")));
-                                } else {
-                                  Navigator.of(
-                                    context,
-                                  ).pushReplacement(MaterialPageRoute(builder: (context) => MainPage()));
-                                }
-                              });
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                        ),
-                        child: const Text("Login", style: TextStyle(fontSize: 18)),
-                      ),
-                    ),
-                  ],
+              _buildField("Username", Icons.person, controllerUsername, false),
+              const SizedBox(height: 15),
+              _buildField("Password", Icons.lock, controllerPassword, true),
+              const SizedBox(height: 30),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: isLoading ? null : login,
+                  style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
+                  child: isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("LOGIN", style: TextStyle(color: Colors.white)),
                 ),
               ),
-
-              const SizedBox(height: 25),
-
-              // Register Link
               TextButton(
-                onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => const RegisterPage(title: "")));
-                },
-                child: const Text(
-                  "Don't have an account? Register here",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-                ),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage())),
+                child: Text("Register New Account", style: TextStyle(color: primaryColor)),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildField(String hint, IconData icon, TextEditingController ctrl, bool isPass) {
+    return TextField(
+      controller: ctrl,
+      obscureText: isPass ? isPasswordHidden : false,
+      decoration: InputDecoration(
+        labelText: hint,
+        prefixIcon: Icon(icon, color: primaryColor),
+        suffixIcon: isPass
+            ? IconButton(
+                icon: Icon(isPasswordHidden ? Icons.visibility_off : Icons.visibility),
+                onPressed: () => setState(() => isPasswordHidden = !isPasswordHidden),
+              )
+            : null,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

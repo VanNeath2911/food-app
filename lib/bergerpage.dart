@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:food_app/cartprovider.dart';
-import 'cartpage.dart'; // Ensure this points to where your CartProvider is defined
 
 class Bergerpage extends StatefulWidget {
   const Bergerpage({super.key, required this.title});
@@ -26,7 +25,6 @@ class _BergerpageState extends State<Bergerpage> with AutomaticKeepAliveClientMi
   @override
   bool get wantKeepAlive => true;
 
-  // Logic to handle adding to the global cart
   void _handleAddToCart(String name, String size, double price, String imagePath) {
     CartProvider().addItem(
       CartItem(
@@ -81,7 +79,7 @@ class _BergerpageState extends State<Bergerpage> with AutomaticKeepAliveClientMi
                 return BurgerItemCard(
                   name: burgers[index]['name']!,
                   imagePath: burgers[index]['image']!,
-                  onAddToCart: _handleAddToCart, // Passing the function here
+                  onAddToCart: _handleAddToCart,
                 );
               }, childCount: burgers.length),
             ),
@@ -134,8 +132,6 @@ class _BurgerItemCardState extends State<BurgerItemCard> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 8),
-
-                // Size Selector
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                   decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(20)),
@@ -148,15 +144,12 @@ class _BurgerItemCardState extends State<BurgerItemCard> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 8),
                 Text(
                   '\$${totalPrice.toStringAsFixed(2)}',
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
                 ),
                 const SizedBox(height: 10),
-
-                // Add Button
                 SizedBox(
                   width: double.infinity,
                   height: 40,
