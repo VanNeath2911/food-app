@@ -1,9 +1,9 @@
-// ignore_for_file: use_build_context_synchronously, duplicate_import
+// ignore_for_file: use_build_context_synchronously, duplicate_import, deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'main.dart'; // កែឈ្មោះឱ្យត្រូវតាម file របស់អ្នក (ឧទាហរណ៍៖ main_page.dart)
+import 'main.dart';
 import 'registerpage.dart';
 
 void main() async {
@@ -117,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
 
               // Login Button
               SizedBox(
-                width: 250, // កំណត់ទំហំឱ្យសមល្មមដូចក្នុងរូបភាព
+                width: 250,
                 height: 50,
                 child: ElevatedButton(
                   onPressed: isLoading ? null : login,
@@ -149,14 +149,10 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // ប្រឡោះ Input ដែលបានកែសម្រួលឱ្យដូចរូបភាព Register (Grey Flat Box)
   Widget _buildField(String hint, IconData icon, TextEditingController ctrl, bool isPass) {
     return Container(
-      width: 300, // កំណត់ទទឹងឱ្យសមនឹងឌីហ្សាញ
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F1F1), // ពណ៌ប្រផេះស្រាលដូចក្នុងរូបភាព
-        borderRadius: BorderRadius.circular(12),
-      ),
+      width: 300,
+      decoration: BoxDecoration(color: const Color(0xFFF1F1F1), borderRadius: BorderRadius.circular(12)),
       child: TextField(
         controller: ctrl,
         obscureText: isPass ? isPasswordHidden : false,

@@ -9,8 +9,8 @@ import 'package:food_app/accountpage.dart';
 import 'package:food_app/cartpage.dart';
 
 class MainPage extends StatefulWidget {
-  final String userId; // គឺជា Username
-  final String password; // គឺជា Password
+  final String userId;
+  final String password;
   const MainPage({Key? key, required this.userId, required this.password}) : super(key: key);
 
   @override
