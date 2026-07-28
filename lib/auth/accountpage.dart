@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:food_app/main.dart';
 import 'package:food_app/history/orderhistory.dart';
+import 'package:food_app/widget/navigationbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AccountPage extends StatefulWidget {
   String userId;
@@ -75,23 +77,29 @@ class _AccountPageState extends State<AccountPage> {
                   if (oldDoc.exists) {
                     Map<String, dynamic> userData = oldDoc.data() as Map<String, dynamic>;
 
-                    userData['username'] = newUsername;
+                    // Update username
+                    userData["username"] = newUsername;
 
+                    // Copy the whole document (including orders)
                     await FirebaseFirestore.instance.collection("collection_credential").doc(newUsername).set(userData);
 
+                    // Delete old document
                     await FirebaseFirestore.instance.collection("collection_credential").doc(oldUsername).delete();
 
-                    if (mounted) {
-                      setState(() {
-                        widget.userId = newUsername;
-                      });
+                    // Update SharedPreferences
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setString("userId", newUsername);
 
-                      Navigator.pop(context);
+                    if (!mounted) return;
 
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(const SnackBar(content: Text("Username updated successfully!")));
-                    }
+                    // Restart MainPage with the new username
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MainPage(userId: newUsername, password: userData["password"]),
+                      ),
+                      (route) => false,
+                    );
                   }
                 } catch (e) {
                   debugPrint("Error updating username: $e");
