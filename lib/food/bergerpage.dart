@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:food_app/cartprovider.dart';
+import 'package:food_app/provider/cartprovider.dart';
 
 class Bergerpage extends StatefulWidget {
   const Bergerpage({super.key, required this.title});

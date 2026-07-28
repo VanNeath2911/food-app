@@ -1,12 +1,12 @@
 // ignore_for_file: use_super_parameters
 import 'package:flutter/material.dart';
-import 'package:food_app/bergerpage.dart';
-import 'package:food_app/drinkpage.dart';
-import 'package:food_app/homepage.dart';
-import 'package:food_app/orderhistory.dart';
-import 'package:food_app/pizzapage.dart';
-import 'package:food_app/accountpage.dart';
-import 'package:food_app/cartpage.dart';
+import 'package:food_app/food/bergerpage.dart';
+import 'package:food_app/food/drinkpage.dart';
+import 'package:food_app/home/homepage.dart';
+import 'package:food_app/history/orderhistory.dart';
+import 'package:food_app/food/pizzapage.dart';
+import 'package:food_app/auth/accountpage.dart';
+import 'package:food_app/food/cartpage.dart';
 
 class MainPage extends StatefulWidget {
   final String userId;

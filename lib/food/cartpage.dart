@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:food_app/cartprovider.dart';
+import 'package:food_app/provider/cartprovider.dart';
 
 class CartPage extends StatefulWidget {
   final String userId;

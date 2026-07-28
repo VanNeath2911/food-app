@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:food_app/cartprovider.dart';
+import 'package:food_app/provider/cartprovider.dart';
 
 class DrinkPage extends StatefulWidget {
   const DrinkPage({super.key, required this.title});
