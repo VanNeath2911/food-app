@@ -1,4 +1,6 @@
-// ignore_for_file: must_be_immutable
+// ignore_for_file: must_be_immutable, unused_field, depend_on_referenced_packages
+
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,6 +8,8 @@ import 'package:food_app/main.dart';
 import 'package:food_app/history/orderhistory.dart';
 import 'package:food_app/widget/navigationbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class AccountPage extends StatefulWidget {
   String userId;
@@ -16,6 +20,31 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
+  File? _image;
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+
+    if (pickedFile == null) return;
+
+    setState(() {
+      _image = File(pickedFile.path);
+    });
+
+    try {
+      final ref = FirebaseStorage.instance.ref().child("profile_images").child("${widget.userId}.jpg");
+
+      await ref.putFile(_image!);
+
+      String url = await ref.getDownloadURL();
+
+      await FirebaseFirestore.instance.collection("collection_credential").doc(widget.userId).update({"photoUrl": url});
+    } catch (e) {
+      debugPrint("Upload error: $e");
+    }
+  }
+
   void _showLogoutDialog() {
     showDialog(
       context: context,
@@ -142,10 +171,18 @@ class _AccountPageState extends State<AccountPage> {
                 ),
                 child: Column(
                   children: [
-                    const CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.white,
-                      child: Icon(Icons.person, size: 60, color: Color(0xFF66B2C3)),
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.white,
+
+                        backgroundImage: userData['photoUrl'] != null ? NetworkImage(userData['photoUrl']) : null,
+
+                        child: userData['photoUrl'] == null
+                            ? const Icon(Icons.person, size: 60, color: Color(0xFF66B2C3))
+                            : null,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Text(
