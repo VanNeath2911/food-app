@@ -4,8 +4,8 @@ import 'package:food_app/main.dart';
 import 'package:food_app/orderhistory.dart';
 
 class AccountPage extends StatefulWidget {
-  final String userId;
-  const AccountPage({super.key, required this.userId});
+  String userId;
+  AccountPage({super.key, required this.userId});
 
   @override
   State<AccountPage> createState() => _AccountPageState();
@@ -80,11 +80,15 @@ class _AccountPageState extends State<AccountPage> {
                     await FirebaseFirestore.instance.collection("collection_credential").doc(oldUsername).delete();
 
                     if (mounted) {
+                      setState(() {
+                        widget.userId = newUsername;
+                      });
+
                       Navigator.pop(context);
+
                       ScaffoldMessenger.of(
                         context,
-                      ).showSnackBar(const SnackBar(content: Text("Username updated! Please login again.")));
-                      _showLogoutDialog();
+                      ).showSnackBar(const SnackBar(content: Text("Username updated successfully!")));
                     }
                   }
                 } catch (e) {
