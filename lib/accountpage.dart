@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:food_app/loginpage.dart';
+import 'package:food_app/main.dart';
 import 'package:food_app/orderhistory.dart';
 
 class AccountPage extends StatefulWidget {
