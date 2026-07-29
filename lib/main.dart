@@ -2,25 +2,38 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'service/firebase_options.dart';
 import 'widget/navigationbar.dart';
 import 'auth/registerpage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const MyApp());
+
+  final prefs = await SharedPreferences.getInstance();
+
+  bool isLogin = prefs.getBool("isLogin") ?? false;
+  String? userId = prefs.getString("userId");
+  String? password = prefs.getString("password");
+
+  runApp(MyApp(isLogin: isLogin, userId: userId, password: password));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isLogin;
+  final String? userId;
+  final String? password;
+
+  const MyApp({super.key, required this.isLogin, this.userId, this.password});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: const Color(0xFF66B2C3)),
-      home: const LoginPage(),
+      home: isLogin ? MainPage(userId: userId!, password: password!) : const LoginPage(),
     );
   }
 }
@@ -51,13 +64,20 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => isLoading = true);
 
     try {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection("collection_credential").doc(user).get();
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection("users").doc(user).get();
 
       if (userDoc.exists) {
         String dbPassword = userDoc.get('password');
 
         if (dbPassword == pass) {
+          final prefs = await SharedPreferences.getInstance();
+
+          await prefs.setBool("isLogin", true);
+          await prefs.setString("userId", user);
+          await prefs.setString("password", pass);
+
           if (!mounted) return;
+
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(

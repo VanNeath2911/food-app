@@ -45,16 +45,34 @@ class _RegisterPageState extends State<RegisterPage> {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: () async {
-                    // ស្វែងរកកន្លែងចុច Sign Up ក្នុង registerpage.dart រួចដូរមកបែបនេះ៖
-                    await FirebaseFirestore.instance
-                        .collection("collection_credential")
-                        .doc(_user.text.trim()) // កំណត់យក Username ជាឈ្មោះ Document
-                        .set({
-                          "username": _user.text.trim(),
-                          "password": _pass.text.trim(),
-                          "created_at": DateTime.now(),
-                        });
-                    Navigator.pop(context); // រួចរាល់ត្រឡប់ទៅ Login
+                    String username = _user.text.trim();
+                    String password = _pass.text.trim();
+
+                    if (username.isEmpty || password.isEmpty) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(const SnackBar(content: Text("Please fill all fields")));
+                      return;
+                    }
+
+                    DocumentSnapshot user = await FirebaseFirestore.instance.collection("users").doc(username).get();
+
+                    if (user.exists) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(const SnackBar(content: Text("Username already exists")));
+                      return;
+                    }
+
+                    await FirebaseFirestore.instance.collection("users").doc(username).set({
+                      "username": username,
+                      "password": password,
+                      "created_at": FieldValue.serverTimestamp(),
+                    });
+
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Register Successful")));
+
+                    Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,

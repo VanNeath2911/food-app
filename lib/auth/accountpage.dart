@@ -98,10 +98,7 @@ class _AccountPageState extends State<AccountPage> {
 
               if (newUsername.isNotEmpty && newUsername != oldUsername) {
                 try {
-                  DocumentSnapshot oldDoc = await FirebaseFirestore.instance
-                      .collection("collection_credential")
-                      .doc(oldUsername)
-                      .get();
+                  DocumentSnapshot oldDoc = await FirebaseFirestore.instance.collection("users").doc(oldUsername).get();
 
                   if (oldDoc.exists) {
                     Map<String, dynamic> userData = oldDoc.data() as Map<String, dynamic>;
@@ -147,7 +144,7 @@ class _AccountPageState extends State<AccountPage> {
     return Scaffold(
       appBar: AppBar(title: const Text("My Account"), backgroundColor: const Color(0xFF66B2C3), centerTitle: true),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection("collection_credential").doc(widget.userId).snapshots(),
+        stream: FirebaseFirestore.instance.collection("users").doc(widget.userId).snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
